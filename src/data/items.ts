@@ -187,7 +187,7 @@ export const ITEM_DEFINITIONS: ItemDefinition[] = [
   {
     id: 'ghost',
     emoji: '👻',
-    label: 'Призрачный товар',
+    label: 'Виртуальный остаток',
     category: 'troll',
     catchPoints: -30,
     catchChaos: 20,
@@ -203,7 +203,7 @@ export const ITEM_DEFINITIONS: ItemDefinition[] = [
   {
     id: 'decoy',
     emoji: '🪤',
-    label: 'Товар-приманка',
+    label: 'Неизвестный товар',
     category: 'troll',
     catchPoints: -40,
     catchChaos: 25,
