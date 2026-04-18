@@ -3,6 +3,7 @@ import type {
   FallingItem,
   DifficultyConfig,
   GameOverStats,
+  CatchAnimation,
 } from '../types/game';
 import {
   ITEM_DEFINITIONS,
@@ -65,6 +66,7 @@ export function createInitialState(): GameState {
     playerMoveTarget: 1,
     catchFlash: null,
     comboPopup: null,
+    catchAnimations: [],
   };
 }
 
@@ -188,6 +190,7 @@ export function updateGame(
   let missed = 0;
   let badCaught = 0;
   let trollCaught = 0;
+  const newAnims: CatchAnimation[] = [];
 
   for (const item of s.items) {
     const moved = { ...item, y: item.y + item.speed * effectSpeed * dt };
@@ -216,6 +219,23 @@ export function updateGame(
         scoreChange += pts;
         chaosChange += effectiveDef.catchChaos * (eff?.chaosMultiplier ?? 1);
         livesChange += effectiveDef.catchLives;
+
+        const animType = effectiveDef.comboBreak ? 'bad' : 'good';
+        const displayEmoji = item.disguised
+          ? (def.category === 'bad' ? '📦' : '⭐')
+          : def.emoji;
+
+        newAnims.push({
+          id: `anim_${item.id}`,
+          lane: item.lane,
+          y: catchY,
+          emoji: displayEmoji,
+          color: item.disguised ? (def.category === 'bad' ? '#f59e0b' : '#eab308') : def.color,
+          points: pts,
+          type: animType,
+          timer: 0.65,
+          duration: 0.65,
+        });
 
         if (effectiveDef.comboBreak) {
           comboBreak = true;
@@ -282,6 +302,17 @@ export function updateGame(
     comboPopup = { value: combo, timer: 0.8 };
   }
 
+  // Update catch animations: move up, fade, remove expired
+  const ANIM_SPEED = 180; // px/second upward
+  const updatedAnims: CatchAnimation[] = [
+    // existing animations
+    ...s.catchAnimations
+      .map((a) => ({ ...a, y: a.y - ANIM_SPEED * dt, timer: a.timer - dt }))
+      .filter((a) => a.timer > 0),
+    // new animations from this frame
+    ...newAnims,
+  ];
+
   // Update flash timers
   if (catchFlash) {
     catchFlash = { ...catchFlash, timer: catchFlash.timer - dt };
@@ -332,6 +363,7 @@ export function updateGame(
       stats: newStats,
       catchFlash,
       comboPopup,
+      catchAnimations: updatedAnims,
     };
   }
 
@@ -347,6 +379,7 @@ export function updateGame(
     stats: newStats,
     catchFlash,
     comboPopup,
+    catchAnimations: updatedAnims,
   };
 }
 

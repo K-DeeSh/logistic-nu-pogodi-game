@@ -192,6 +192,43 @@ export default function GameCanvas({ state, canvasWidth, canvasHeight }: Props) 
     ctx.textBaseline = 'middle';
     ctx.fillText('🧑‍🏭', px, by + playerH * 0.12);
 
+    // ── Catch animations (fly-up) ────────────────────────────────────
+    for (const anim of state.catchAnimations) {
+      const progress = 1 - anim.timer / anim.duration; // 0→1
+      const alpha = anim.timer / anim.duration;         // 1→0 (fade out)
+      const scale = 1 + progress * 0.35;               // grows slightly
+      const acx = anim.lane * laneW + laneW / 2;
+      const aAW = laneW * 0.72;
+      const aAH = 44;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(acx, anim.y);
+      ctx.scale(scale, scale);
+
+      // Card background
+      drawRoundedRect(ctx, -aAW / 2, -aAH / 2, aAW, aAH, 8);
+      ctx.fillStyle = anim.color;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Emoji
+      ctx.font = '20px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(anim.emoji, 0, -6);
+
+      // Points label
+      const ptsLabel = anim.points >= 0 ? `+${anim.points}` : String(anim.points);
+      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.fillStyle = anim.type === 'good' ? '#bbf7d0' : '#fecaca';
+      ctx.fillText(ptsLabel, 0, 11);
+
+      ctx.restore();
+    }
+
     // ── Combo popup ──────────────────────────────────────────────────
     if (state.comboPopup && state.comboPopup.timer > 0) {
       const { value, timer } = state.comboPopup;

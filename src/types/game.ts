@@ -76,6 +76,18 @@ export interface GameOverStats extends GameStats {
   survivalTime: number;      // seconds
 }
 
+export interface CatchAnimation {
+  id: string;
+  lane: number;
+  y: number;           // current y position (moves upward)
+  emoji: string;
+  color: string;
+  points: number;      // signed — shown as +50 or -30
+  type: 'good' | 'bad';
+  timer: number;       // seconds remaining
+  duration: number;    // total duration in seconds
+}
+
 export interface GameState {
   status: 'idle' | 'playing' | 'gameover';
   score: number;
@@ -94,4 +106,5 @@ export interface GameState {
   playerMoveTarget: number;  // for smooth animation
   catchFlash: { lane: number; type: 'good' | 'bad' | 'miss'; timer: number } | null;
   comboPopup: { value: number; timer: number } | null;
+  catchAnimations: CatchAnimation[];
 }
