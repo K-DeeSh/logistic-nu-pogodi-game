@@ -9,6 +9,26 @@ interface Props {
   canvasHeight: number;
 }
 
+// Рисует текст, уменьшая шрифт пока не поместится в maxWidth
+function fillFitText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  maxSize: number,
+  minSize = 7,
+  weight = 'bold'
+) {
+  let size = maxSize;
+  ctx.font = `${weight} ${size}px system-ui, sans-serif`;
+  while (ctx.measureText(text).width > maxWidth && size > minSize) {
+    size -= 0.5;
+    ctx.font = `${weight} ${size}px system-ui, sans-serif`;
+  }
+  ctx.fillText(text, x, y);
+}
+
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number, r: number
@@ -158,10 +178,9 @@ export default function GameCanvas({ state, canvasWidth, canvasHeight }: Props) 
       ctx.textBaseline = 'middle';
       ctx.fillText(displayEmoji, cx, iy + itemH * 0.42);
 
-      // Label
-      ctx.font = `bold ${Math.max(9, itemW * 0.14)}px system-ui, sans-serif`;
+      // Label — уменьшаем шрифт если не влезает
       ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.fillText(displayLabel, cx, iy + itemH * 0.82);
+      fillFitText(ctx, displayLabel, cx, iy + itemH * 0.82, itemW - 8, Math.max(9, itemW * 0.14));
     }
 
     // ── Player (warehouse worker) ────────────────────────────────────
