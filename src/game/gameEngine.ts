@@ -33,15 +33,27 @@ export function initialDifficulty(): DifficultyConfig {
 
 // ── Difficulty scaling based on elapsed game time ───────────────────
 export function scaleDifficulty(seconds: number): DifficultyConfig {
-  const t = Math.min(seconds, 180); // cap at 3 minutes
-  const factor = 1 + t / 90; // 1x at 0s, 3x at 180s
+  // Phase 1: 0–180s (0–3 min) — плавный рост
+  const t1 = Math.min(seconds, 180);
+  const factor1 = 1 + t1 / 90; // 1x → 3x
+
+  // Phase 2: 180s+ (3+ min) — дополнительный рост поверх phase 1
+  const t2 = Math.max(0, seconds - 180);
+  const factor2 = 1 + t2 / 120; // 1x → бесконечно, ~1.5x на 4й минуте
+
+  const speed = Math.min(110 * factor1 * factor2, 420);
+  const spawnInterval = Math.max(1400 / (factor1 * factor2), 300);
+  const maxItems = Math.min(5 + Math.floor(t1 / 20) + Math.floor(t2 / 30), 12);
+  const badChance = Math.min(0.06 + t1 / 900 + t2 / 300, 0.40);
+  const trollChance = Math.min(0.03 + t1 / 1200 + t2 / 400, 0.20);
+
   return {
-    baseSpeed: Math.min(110 * factor, 300),
-    spawnInterval: Math.max(1400 / factor, 450),
-    maxItemsOnScreen: Math.min(5 + Math.floor(t / 20), 10),
-    badItemChance: Math.min(0.06 + t / 900, 0.25),
-    specialItemChance: Math.min(0.10 + t / 600, 0.25),
-    trollItemChance: Math.min(0.03 + t / 1200, 0.12),
+    baseSpeed: speed,
+    spawnInterval,
+    maxItemsOnScreen: maxItems,
+    badItemChance: badChance,
+    specialItemChance: Math.min(0.10 + t1 / 600, 0.25),
+    trollItemChance: trollChance,
     eventChance: 0.18,
   };
 }
