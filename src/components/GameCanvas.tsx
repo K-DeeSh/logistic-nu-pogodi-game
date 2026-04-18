@@ -9,9 +9,6 @@ interface Props {
   canvasHeight: number;
 }
 
-// Emoji render helper — precompute to avoid re-measuring
-const EMOJI_CACHE: Record<string, boolean> = {};
-
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number, r: number
@@ -37,8 +34,6 @@ export default function GameCanvas({ state, canvasWidth, canvasHeight }: Props) 
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    EMOJI_CACHE; // referenced to avoid lint warning
 
     const laneW = canvasWidth / LANES;
     const catchY = canvasHeight - CATCH_ZONE_HEIGHT;
@@ -86,6 +81,14 @@ export default function GameCanvas({ state, canvasWidth, canvasHeight }: Props) 
     const pl = state.playerLane;
     ctx.fillStyle = 'rgba(59,130,246,0.08)';
     ctx.fillRect(pl * laneW + 2, 0, laneW - 4, canvasHeight);
+
+    // Lane number indicators
+    for (let i = 0; i < LANES; i++) {
+      ctx.font = 'bold 11px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = i === pl ? '#3b82f6' : '#1e293b';
+      ctx.fillText(String(i + 1), i * laneW + laneW / 2, 18);
+    }
 
     // ── Catch flash ──────────────────────────────────────────────────
     if (state.catchFlash && state.catchFlash.timer > 0) {

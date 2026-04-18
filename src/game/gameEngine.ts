@@ -124,11 +124,11 @@ function spawnItem(state: GameState, canvasHeight: number): FallingItem | null {
   const effectSpeed = eff?.speedMultiplier ?? 1;
 
   // disguise logic
-  const disguised =
-    (eff?.disguiseBad && def.category === 'bad') ||
-    (eff?.disguiseVIP && def.category === 'troll');
+  const disguised: boolean =
+    !!(eff?.disguiseBad && def.category === 'bad') ||
+    !!(eff?.disguiseVIP && def.category === 'troll');
 
-  const flicker = eff?.flickerItems ?? false;
+  const flicker: boolean = eff?.flickerItems ?? false;
 
   // start above canvas
   return {
@@ -206,7 +206,7 @@ export function updateGame(
 
         const scoreM = eff?.scoreMultiplier ?? 1;
         const comboM = eff?.comboMultiplier ?? 1;
-        const vipM = (def.category === 'good_special' && def.id === 'vip')
+        const vipM = def.category === 'good_special'
           ? (eff?.vipBonusMultiplier ?? 1)
           : 1;
 
@@ -228,18 +228,21 @@ export function updateGame(
           catchFlash = { lane: item.lane, type: 'good', timer: 0.3 };
         }
       } else {
-        // Missed
+        // Missed (player was in a different lane)
         const def = ITEMS_BY_ID[item.defId];
         if (def.category === 'normal' || def.category === 'good_special') {
           scoreChange += def.missPoints;
           chaosChange += def.missChaos * (eff?.chaosMultiplier ?? 1);
           livesChange += def.missLives;
-          if (def.missPoints < 0 || def.missChaos > 0) {
+          // Only VIP/urgent cause a combo break when missed
+          if (def.category === 'good_special' && def.missChaos >= 8) {
             comboBreak = true;
+            missed++;
+          } else if (def.missPoints < 0) {
             missed++;
           }
         }
-        // bad/troll items: no penalty for missing
+        // bad/troll items: correct move to let them pass — no penalty
       }
     } else if (moved.y > canvasHeight + 20) {
       // Gone past bottom without catching
