@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react';
+import { fetchLeaderboard, type LeaderboardEntry } from '../api';
+
 interface Props {
   highScore: number;
+  login: string;
   onStart: () => void;
 }
 
-export default function StartScreen({ highScore, onStart }: Props) {
+export default function StartScreen({ highScore, login, onStart }: Props) {
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
+  useEffect(() => {
+    fetchLeaderboard(10).then(setLeaderboard);
+  }, []);
+
   return (
     <div style={{
       position: 'absolute',
@@ -12,6 +22,7 @@ export default function StartScreen({ highScore, onStart }: Props) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      overflowY: 'auto',
       zIndex: 100,
       padding: 16,
     }}>
@@ -35,11 +46,49 @@ export default function StartScreen({ highScore, onStart }: Props) {
         }}>
           Warehouse Catcher
         </h1>
-        <p style={{ color: '#64748b', fontSize: 13, marginBottom: 18 }}>
+        <p style={{ color: '#64748b', fontSize: 13, marginBottom: 4 }}>
           Склад в хаосе. Кладовщик нужен.
         </p>
+        {login && (
+          <p style={{ color: '#3b82f6', fontSize: 13, marginBottom: 14, fontWeight: 700 }}>
+            👋 {login}
+          </p>
+        )}
 
-        {highScore > 0 && (
+        {leaderboard.length > 0 ? (
+          <div style={{
+            background: '#0f172a',
+            borderRadius: 12,
+            padding: '12px 14px',
+            margin: '0 0 14px',
+            textAlign: 'left',
+            border: '1px solid #1e293b',
+          }}>
+            <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+              🌐 Глобальный топ
+            </div>
+            {leaderboard.slice(0, 5).map((entry, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                gap: 6,
+                alignItems: 'center',
+                fontSize: 12,
+                padding: '2px 0',
+                color: entry.login === login ? '#fde047' : '#94a3b8',
+                fontWeight: entry.login === login ? 700 : 400,
+              }}>
+                <span style={{ color: '#475569', width: 16, textAlign: 'right' }}>{i + 1}.</span>
+                <span style={{ color: '#fde047', fontWeight: 700, minWidth: 40 }}>{entry.score}</span>
+                <span>{entry.login}</span>
+                {entry.duration_seconds ? (
+                  <span style={{ color: '#475569', marginLeft: 'auto', fontSize: 10 }}>
+                    {Math.floor(entry.duration_seconds / 60)}м{Math.floor(entry.duration_seconds % 60)}с
+                  </span>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : highScore > 0 ? (
           <div style={{
             color: '#fde047',
             fontSize: 13,
@@ -51,7 +100,7 @@ export default function StartScreen({ highScore, onStart }: Props) {
           }}>
             🏆 Рекорд: {highScore}
           </div>
-        )}
+        ) : null}
 
         {/* How to play */}
         <div style={{

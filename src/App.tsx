@@ -14,11 +14,14 @@ import EventBanner from './components/EventBanner';
 import MobileControls from './components/MobileControls';
 import GameOver from './components/GameOver';
 import StartScreen from './components/StartScreen';
+import LoginScreen, { getSavedLogin } from './components/LoginScreen';
+import { submitScore } from './api';
 
 const MAX_CANVAS_W = 480;
 const CANVAS_ASPECT = 0.6; // width/height ratio → width = height * 0.6
 
 export default function App() {
+  const [login, setLogin] = useState<string>(() => getSavedLogin());
   const [gameState, setGameState] = useState<GameState>(createInitialState());
   const stateRef = useRef(gameState);
   stateRef.current = gameState;
@@ -135,6 +138,30 @@ export default function App() {
     ? getGameOverStats(gameState)
     : null;
 
+  // Submit score to backend when game ends
+  const submittedRef = useRef(false);
+  useEffect(() => {
+    if (gameState.status === 'gameover' && !submittedRef.current && login) {
+      submittedRef.current = true;
+      submitScore({
+        login,
+        score: gameState.score,
+        duration_seconds: Math.floor(gameState.gameTime),
+        stats: {
+          caught: gameState.stats.caught,
+          missed: gameState.stats.missed,
+          badCaught: gameState.stats.badCaught,
+          trollCaught: gameState.stats.trollCaught,
+          maxCombo: gameState.stats.maxCombo,
+          eventsLived: gameState.stats.eventsLived,
+        },
+      });
+    }
+    if (gameState.status === 'playing') {
+      submittedRef.current = false;
+    }
+  }, [gameState.status, gameState.score, gameState.gameTime, gameState.stats, login]);
+
   return (
     <div style={{
       height: '100dvh',
@@ -184,8 +211,11 @@ export default function App() {
           canvasHeight={canvasSize.h}
         />
 
-        {gameState.status === 'idle' && (
-          <StartScreen highScore={gameState.highScore} onStart={handleStart} />
+        {gameState.status === 'idle' && !login && (
+          <LoginScreen onLogin={(l) => setLogin(l)} />
+        )}
+        {gameState.status === 'idle' && login && (
+          <StartScreen highScore={gameState.highScore} login={login} onStart={handleStart} />
         )}
         {gameState.status === 'gameover' && gameOverStats && (
           <GameOver stats={gameOverStats} onRestart={handleRestart} />
