@@ -15,7 +15,7 @@ import MobileControls from './components/MobileControls';
 import GameOver from './components/GameOver';
 import StartScreen from './components/StartScreen';
 import LoginScreen, { getSavedLogin } from './components/LoginScreen';
-import { submitScore } from './api';
+import { startSession, submitScore } from './api';
 
 const MAX_CANVAS_W = 480;
 const CANVAS_ASPECT = 0.6; // width/height ratio → width = height * 0.6
@@ -24,6 +24,7 @@ export default function App() {
   const [login, setLogin] = useState<string>(() => getSavedLogin());
   const [gameState, setGameState] = useState<GameState>(createInitialState());
   const stateRef = useRef(gameState);
+  const sessionTokenRef = useRef<string | null>(null);
   stateRef.current = gameState;
 
   const rafRef = useRef<number | undefined>(undefined);
@@ -119,10 +120,12 @@ export default function App() {
 
   // ── Handlers ─────────────────────────────────────────────────────
   const handleStart = useCallback(() => {
+    startSession('nu_pogodi').then(token => { sessionTokenRef.current = token; });
     setGameState((prev) => startGame(prev));
   }, []);
 
   const handleRestart = useCallback(() => {
+    startSession('nu_pogodi').then(token => { sessionTokenRef.current = token; });
     setGameState((prev) => startGame(prev));
   }, []);
 
@@ -155,7 +158,9 @@ export default function App() {
           maxCombo: gameState.stats.maxCombo,
           eventsLived: gameState.stats.eventsLived,
         },
+        token: sessionTokenRef.current,
       });
+      sessionTokenRef.current = null;
     }
     if (gameState.status === 'playing') {
       submittedRef.current = false;

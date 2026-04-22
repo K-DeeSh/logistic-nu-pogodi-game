@@ -1,5 +1,20 @@
 const API_URL = 'http://localhost:3001';
 
+export async function startSession(gameId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/session/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ game_id: gameId }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { token: string };
+    return data.token;
+  } catch {
+    return null;
+  }
+}
+
 export interface LeaderboardEntry {
   login: string;
   score: number;
@@ -13,6 +28,7 @@ export async function submitScore(payload: {
   score: number;
   duration_seconds: number;
   stats: Record<string, number>;
+  token: string | null;
 }): Promise<void> {
   try {
     await fetch(`${API_URL}/api/scores`, {
