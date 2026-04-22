@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001';
+const API_URL = 'http://localhost:4000';
 
 export async function startSession(gameId: string): Promise<string | null> {
   try {
